@@ -19,3 +19,19 @@ SDL2.dll
 shader/basic_fs.bin
 
 shader/basic_vs.bin
+
+bgfx-shared-libDebug.dll
+
+bgfx-shared-libDebug.pdb
+
+.vs/001_bgfx_sdl/v16/.suo
+
+.vs/001_bgfx_sdl/v16/Browse.VC.db
+
+.vs/001_bgfx_sdl/v16/ipch/AutoPCH/5e295e50bb4dec48/DEBUG.ipch
+
+.vs/001_bgfx_sdl/v16/ipch/AutoPCH/b9b5f627a98f1603/DEBUG.ipch
+
+shader/fs_cubes.bin
+
+shader/vs_cubes.bin

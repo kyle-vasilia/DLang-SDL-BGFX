@@ -24,23 +24,28 @@ static const Uint16[] index = [
     0, 2, 3
 ];
 
-
 bgfx_shader_handle_t loadShader(string name) {
-    import std.file;
+    import core.stdc.stdio;
     import std.string : toStringz;
     
-    auto f = File(name, "r");
-    auto buf = f.rawRead(new ubyte[2048]);
-    buf = buf ~ '\0';
-    scope(exit) f.close();
+    //Use C-Style File I/O - issue with loading binary data with regular.
+    FILE *file = fopen(toStringz(name), "rb");
+    scope(exit) fclose(file);
+    fseek(file, 0, SEEK_END);
+    const auto size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-
-    const bgfx_memory_t *mem = bgfx_copy(&buf,cast(uint)f.size + 1);
-    bgfx_shader_handle_t handle = bgfx_create_shader(mem);
+    ubyte[] data = new ubyte[size+1];
     
-    
-    bgfx_set_shader_name(handle, toStringz(name), name.sizeof);
+    fread(&data[0], size, 1, file);
+    data[size] = '\0'; //Null-terminate it
+   
+    const bgfx_memory_t *mem = bgfx_copy(&data[0],cast(uint)data.length);
+   
+    bgfx_shader_handle_t handle= bgfx_create_shader(mem);
+    bgfx_set_shader_name(handle, toStringz(name), cast(int)name.length);
     return handle;
+
 }
 
 
@@ -69,12 +74,19 @@ void main() {
     bgfx_set_platform_data(&pd);
 
     bgfx_init_t init;
-    init.type = bgfx_renderer_type_t.BGFX_RENDERER_TYPE_COUNT;
+    init.type = bgfx_renderer_type_t.BGFX_RENDERER_TYPE_OPENGL;
     init.vendorId = BGFX_PCI_ID_NONE;
+    init.resolution.width = 900;
+    init.resolution.height = 600;
+    init.resolution.reset = BGFX_RESET_VSYNC;
+    
     bgfx_init(&init);
+
+
 
     bgfx_reset(900, 600, BGFX_RESET_VSYNC, 
         bgfx_texture_format_t.BGFX_TEXTURE_FORMAT_RGBA32U);
+
 
     bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_PROFILER);
 
@@ -107,8 +119,7 @@ void main() {
     bgfx_shader_handle_t vs = loadShader("shader/basic_vs.bin");
     bgfx_shader_handle_t fs = loadShader("shader/basic_fs.bin");
     bgfx_program_handle_t program = bgfx_create_program(vs, fs, true);
-
-
+    
     bool running = true;
     SDL_Event e;
     while(running) {
@@ -130,7 +141,7 @@ void main() {
         
 
         bgfx_set_state(BGFX_STATE_DEFAULT, 0x000000FF);
-        bgfx_submit(0, program, 32, 0);
+        bgfx_submit(0, program, 0, 0);
 
 
 

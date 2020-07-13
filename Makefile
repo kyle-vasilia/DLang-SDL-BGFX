@@ -2,8 +2,8 @@ shaderc = shaderc
 output = shader
 
 
-vertex_flag = --type vertex --platform windows -p vs_5_0 -O 3
-fragment_flag = --type fragment --platform windows -p ps_5_0 -O 3
+vertex_flag = --type vertex --platform windows -p 120 -O 3
+fragment_flag = --type fragment --platform windows -p 120 -O 3
 def_flag = --varyingdef source-shader/define.def
 
 d_glob := $(wildcard source/*.d)
@@ -28,4 +28,4 @@ $(output)/basic_fs.bin : source-shader/basic.frag
 
 
 clean : 
-	rm $(bin)/basic.vert.bin
+	rm $(output)/*.bin
