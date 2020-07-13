@@ -1,1 +1,1 @@
-001_bgfx_sdl
+A Simple example of using bindbc-bgfx and bindbc-sdl to make a working application in D!
