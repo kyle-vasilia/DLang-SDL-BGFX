@@ -2,6 +2,8 @@ import std.stdio;
 import bindbc.sdl;
 import bindbc.bgfx;
 
+import gl3n.math;
+import gl3n.linalg;
 
 struct Vertex {
     float x;
@@ -13,10 +15,10 @@ struct Vertex {
 
 
 static immutable Vertex[] quad = [
-    {x : -1.0f, y :  1.0f, z : 0.0f, rgba : 0xff0000ff},
-    {x :  1.0f, y :  1.0f, z : 0.0f, rgba : 0xff0000ff},
-    {x :  1.0f, y : -1.0f, z : 0.0f, rgba : 0xff0000ff},
-    {x : -1.0f, y : -1.0f, z : 0.0f, rgba : 0xff0000ff}
+    {x : -1.0f, y :  1.0f, z : 1.0f, rgba : 0xff0000ff},
+    {x :  1.0f, y :  1.0f, z : 1.0f, rgba : 0xff0000ff},
+    {x :  1.0f, y : -1.0f, z : 1.0f, rgba : 0xff0000ff},
+    {x : -1.0f, y : -1.0f, z : 1.0f, rgba : 0xff0000ff}
 ];
 
 static const Uint16[] index = [
@@ -84,34 +86,26 @@ void main() {
 
 
 
-    bgfx_reset(900, 600, BGFX_RESET_VSYNC, 
-        bgfx_texture_format_t.BGFX_TEXTURE_FORMAT_RGBA32U);
-
-
-    bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_PROFILER);
-
-    bgfx_set_view_clear(0, BGFX_CLEAR_COLOR,
-        0x303030ff, 1.0f, 0);
-
+ 
     bgfx_vertex_layout_t vertexFmt;
     bgfx_vertex_layout_begin(&vertexFmt, bgfx_renderer_type_t.BGFX_RENDERER_TYPE_NOOP);
     bgfx_vertex_layout_add(&vertexFmt, bgfx_attrib_t.BGFX_ATTRIB_POSITION, 
         3, bgfx_attrib_type_t.BGFX_ATTRIB_TYPE_FLOAT, false, false);
     bgfx_vertex_layout_add(&vertexFmt, bgfx_attrib_t.BGFX_ATTRIB_COLOR0,
-        1, bgfx_attrib_type_t.BGFX_ATTRIB_TYPE_UINT8, true, false);
+        4, bgfx_attrib_type_t.BGFX_ATTRIB_TYPE_UINT8, true, false);
     bgfx_vertex_layout_end(&vertexFmt);
 
     bgfx_vertex_buffer_handle_t vbo;
     bgfx_index_buffer_handle_t ibo;
     vbo = bgfx_create_vertex_buffer(
-        bgfx_make_ref(&quad, quad.sizeof),
+        bgfx_make_ref(quad.ptr, quad.length * Vertex.sizeof),
         &vertexFmt,
-        BGFX_BUFFER_NONE
+        0
     );
 
     ibo = bgfx_create_index_buffer(
-        bgfx_make_ref(&index, index.sizeof),
-        BGFX_BUFFER_NONE
+        bgfx_make_ref(index.ptr, index.sizeof),
+        0
     );
 
 
@@ -120,6 +114,17 @@ void main() {
     bgfx_shader_handle_t fs = loadShader("shader/basic_fs.bin");
     bgfx_program_handle_t program = bgfx_create_program(vs, fs, true);
     
+
+    bgfx_reset(900, 600, BGFX_RESET_VSYNC, 
+        bgfx_texture_format_t.BGFX_TEXTURE_FORMAT_RGBA32U);
+
+
+    bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_PROFILER);
+
+    bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+        0x303030ff, 1.0f, 0);
+    bgfx_touch(0);
+
     bool running = true;
     SDL_Event e;
     while(running) {
@@ -132,17 +137,27 @@ void main() {
                     break;
             }
         }
-        
+
+        mat4 view = mat4.look_at(vec3(0, 10, 0), 
+                            vec3(0, 0, 0), 
+                            vec3(0, 1, 0));
+        mat4 proj = mat4.perspective(900, 600, 70, 0.1, 200);
+
+        bgfx_set_view_transform(0, &view.matrix[0][0],
+                    &proj.matrix[0][0]);
+
         bgfx_set_view_rect(0, 0, 0, 900, 600);
         bgfx_touch(0);
         
         bgfx_set_vertex_buffer(0, vbo, 0, 4);
         bgfx_set_index_buffer(ibo, 0, 6);
         
+        
+        
 
-        bgfx_set_state(BGFX_STATE_DEFAULT, 0x000000FF);
+        bgfx_set_state(BGFX_STATE_DEFAULT, 0);
+        
         bgfx_submit(0, program, 0, 0);
-
 
 
         bgfx_frame(false);
