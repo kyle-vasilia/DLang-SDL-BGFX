@@ -32,7 +32,7 @@ endif
 
 .PHONY : output
 output :
-	mkdir $(output)
+	[ -d $(output) ] || mkdir $(output)
 
 .PHONY : shaders
 shaders: $(output)/basic_vs.bin $(output)/basic_fs.bin
