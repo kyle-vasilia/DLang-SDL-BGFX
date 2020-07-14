@@ -50,6 +50,7 @@ bgfx_shader_handle_t loadShader(string name) {
 
 immutable static uint width = 900;
 immutable static uint height = 600;
+string shaderDir = "shader/";
 
 void main() { 
     writeln(loadSDL() == sdlSupport);
@@ -63,10 +64,22 @@ void main() {
     SDL_SysWMinfo wmi;
     SDL_VERSION(&wmi.version_);
     SDL_GetWindowWMInfo(win, &wmi);
-
+    
     bgfx_platform_data_t pd;
+
+    
+    version(Windows) {
     pd.ndt = null;
     pd.nwh = wmi.info.win.window;
+        shaderDir ~= "Windows";
+    }
+    version(linux) {
+        pd.ndt = wmi.info.x11.display;
+        pd.nwh = cast(uint*)wmi.info.x11.window;
+        shaderDir ~= "Linux";
+    }
+   
+    
 
     pd.context = null;
     pd.backBuffer = null;
@@ -109,8 +122,8 @@ void main() {
 
 
 
-    bgfx_shader_handle_t vs = loadShader("shader/basic_vs.bin");
-    bgfx_shader_handle_t fs = loadShader("shader/basic_fs.bin");
+    bgfx_shader_handle_t vs = loadShader(shaderDir ~ "/basic_vs.bin");
+    bgfx_shader_handle_t fs = loadShader(shaderDir ~"/basic_fs.bin");
     bgfx_program_handle_t program = bgfx_create_program(vs, fs, true);
     
 
