@@ -1,7 +1,7 @@
 shaderc = shaderc
-os := $(shell uname)
-os_flag := Unsupported
-output = shader/$(os)
+os_flag := Unset 
+
+output := shader/%
 
 
 vertex_flag = --type vertex -p 120 -O 3
@@ -12,21 +12,26 @@ d_glob := $(wildcard source/*.d)
 
 
 .PHONY : all
-all : platform $(output) shaders $(d_glob)
+all : platform output shaders $(d_glob)
 	dub build --compiler=dmd -a=x86_64 -b=debug -c=application
 
 .PHONY : platform 
 platform: 
-ifeq ($(os),Linux)
-os_flag := --platform linux 	
-else ifeq($(os),Windows)
+ifeq ($(OS),Windows_NT)
 os_flag := --platform windows
+output = shader/Windows
 else 
-	$(error Your OS is not supported)
+unix_os := $(shell uname)
+ifeq($(unix_os),Linux)
+os_flag := --platform linux
+output = shader/Linux
 endif 
+	
 
 
-$(output) : 
+
+.PHONY : output
+output :
 	mkdir $(output)
 
 .PHONY : shaders
