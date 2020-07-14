@@ -12,18 +12,16 @@ struct Vertex {
     Uint32 rgba;
 }
 
-
-
 static immutable Vertex[] quad = [
-    {x : -1.0f, y :  1.0f, z : 1.0f, rgba : 0xff0000ff},
-    {x :  1.0f, y :  1.0f, z : 1.0f, rgba : 0xff0000ff},
-    {x :  1.0f, y : -1.0f, z : 1.0f, rgba : 0xff0000ff},
-    {x : -1.0f, y : -1.0f, z : 1.0f, rgba : 0xff0000ff}
+    {   0.5f,  0.5f, 0.0f,  rgba : 0xff0000ff},
+    {   0.5f, -0.5f, 0.0f,  rgba : 0xff0000ff},
+    {  -0.5f, -0.5f, 0.0f,  rgba : 0xff0000ff},
+    {  -0.5f,  0.5f, 0.0f, rgba : 0xff0000ff}
 ];
 
 static const Uint16[] index = [
-    0, 1, 2,
-    0, 2, 3
+    0, 1, 3,  
+    1, 2, 3
 ];
 
 bgfx_shader_handle_t loadShader(string name) {
@@ -50,7 +48,8 @@ bgfx_shader_handle_t loadShader(string name) {
 
 }
 
-
+immutable static uint width = 900;
+immutable static uint height = 600;
 
 void main() { 
     writeln(loadSDL() == sdlSupport);
@@ -59,7 +58,7 @@ void main() {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *win = SDL_CreateWindow("Title",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        900, 600, SDL_WINDOW_SHOWN);
+        width, height, SDL_WINDOW_SHOWN);
 
     SDL_SysWMinfo wmi;
     SDL_VERSION(&wmi.version_);
@@ -78,8 +77,8 @@ void main() {
     bgfx_init_t init;
     init.type = bgfx_renderer_type_t.BGFX_RENDERER_TYPE_OPENGL;
     init.vendorId = BGFX_PCI_ID_NONE;
-    init.resolution.width = 900;
-    init.resolution.height = 600;
+    init.resolution.width = width;
+    init.resolution.height = height;
     init.resolution.reset = BGFX_RESET_VSYNC;
     
     bgfx_init(&init);
@@ -119,7 +118,7 @@ void main() {
         bgfx_texture_format_t.BGFX_TEXTURE_FORMAT_RGBA32U);
 
 
-    bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_PROFILER);
+    bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
 
     bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
         0x303030ff, 1.0f, 0);
@@ -138,26 +137,23 @@ void main() {
             }
         }
 
-        mat4 view = mat4.look_at(vec3(0, 10, 0), 
-                            vec3(0, 0, 0), 
-                            vec3(0, 1, 0));
-        mat4 proj = mat4.perspective(900, 600, 70, 0.1, 200);
-
-        bgfx_set_view_transform(0, &view.matrix[0][0],
-                    &proj.matrix[0][0]);
-
-        bgfx_set_view_rect(0, 0, 0, 900, 600);
+        bgfx_set_view_rect(0, 0, 0, width, height);
         bgfx_touch(0);
         
         bgfx_set_vertex_buffer(0, vbo, 0, 4);
         bgfx_set_index_buffer(ibo, 0, 6);
         
-        
+        ulong state = 0 
+        | BGFX_STATE_WRITE_R 
+        | BGFX_STATE_WRITE_G
+        | BGFX_STATE_WRITE_B 
+        | BGFX_STATE_WRITE_A;
+
+        bgfx_set_state(state, 0);
         
 
-        bgfx_set_state(BGFX_STATE_DEFAULT, 0);
-        
-        bgfx_submit(0, program, 0, 0);
+
+        bgfx_submit(0, program, 0, BGFX_DISCARD_NONE);
 
 
         bgfx_frame(false);
